@@ -32,9 +32,30 @@ UIViewAnimationOptions const SSWNavigationTransitionCurve = 7 << 16;
 
 @interface SSWAnimator()
 @property (weak, nonatomic) UIViewController *toViewController;
+@property CGFloat keyboardHeight;
 @end
 
 @implementation SSWAnimator
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+        [center addObserver:self selector:@selector(keyboardOnScreen:) name:UIKeyboardDidShowNotification object:nil];
+    }
+    return self;
+}
+
+-(void)keyboardOnScreen:(NSNotification *)notification
+ {
+        NSDictionary *info  = notification.userInfo;
+        NSValue      *value = info[UIKeyboardFrameEndUserInfoKey];
+
+        printf("keyboard shown with height: ");
+        printf("%f\n", [value CGRectValue].size.height);
+        self.keyboardHeight = [value CGRectValue].size.height;
+ }
 
 - (NSTimeInterval)transitionDuration:(id <UIViewControllerContextTransitioning>)transitionContext
 {
@@ -99,11 +120,16 @@ UIViewAnimationOptions const SSWNavigationTransitionCurve = 7 << 16;
     [UIView animateWithDuration:[self transitionDuration:transitionContext] delay:0 options:UIViewAnimationOptionTransitionNone | curveOption animations:^{
         toViewController.view.transform = CGAffineTransformIdentity;
         fromViewController.view.transform = CGAffineTransformMakeTranslation(toViewController.view.frame.size.width, 0);
-        
+        CGFloat safeAreaBottomInset = 0;
+        if (@available(iOS 11.0, *)) {
+            safeAreaBottomInset = toViewController.view.safeAreaInsets.bottom;
+        }
         if (fromViewController.isFirstResponder) {
-            keyboard.transform = CGAffineTransformMakeTranslation(toViewController.view.frame.size.width, -keyboard.frame.size.height);
+            printf("keyboard height in transition: ");
+            printf("%f\n", self.keyboardHeight);
+            keyboard.transform = CGAffineTransformMakeTranslation(toViewController.view.frame.size.width, -self.keyboardHeight);
         } else {
-            keyboard.transform = CGAffineTransformMakeTranslation(toViewController.view.frame.size.width, -keyboard.frame.size.height - 260);
+            keyboard.transform = CGAffineTransformMakeTranslation(toViewController.view.frame.size.width, -self.keyboardHeight);
         }
         dimmingView.alpha = 0.0f;
 
@@ -127,6 +153,7 @@ UIViewAnimationOptions const SSWNavigationTransitionCurve = 7 << 16;
     self.toViewController = toViewController;
 }
 
+
 - (void)animationEnded:(BOOL)transitionCompleted
 {
     // restore the toViewController's transform if the animation was cancelled
@@ -139,52 +166,3 @@ UIViewAnimationOptions const SSWNavigationTransitionCurve = 7 << 16;
 
 @end
 
-//@interface KeyboardStateListener : NSObject {
-//    BOOL _isVisible;
-//}
-//+ (KeyboardStateListener *)sharedInstance;
-//@property (nonatomic, readonly, getter=isVisible) BOOL visible;
-//@end
-//
-//static KeyboardStateListener *sharedInstance;
-//
-//@implementation KeyboardStateListener
-//
-//+ (KeyboardStateListener *)sharedInstance
-//{
-//    return sharedInstance;
-//}
-//
-//+ (void)load
-//{
-//    @autoreleasepool {
-//        sharedInstance = [[self alloc] init];
-//    }
-//}
-//
-//- (BOOL)isVisible
-//{
-//    return _isVisible;
-//}
-//
-//- (void)didShow
-//{
-//    _isVisible = YES;
-//}
-//
-//- (void)didHide
-//{
-//    _isVisible = NO;
-//}
-//
-//- (id)init
-//{
-//    if ((self = [super init])) {
-//        NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-//        [center addObserver:self selector:@selector(didShow) name:UIKeyboardDidShowNotification object:nil];
-//        [center addObserver:self selector:@selector(didHide) name:UIKeyboardWillHideNotification object:nil];
-//    }
-//    return self;
-//}
-//
-//@end
