@@ -10,6 +10,7 @@
 
 @interface SloppySwiper() <UIGestureRecognizerDelegate, SSWAnimatorDelegate>
 @property (weak, readwrite, nonatomic) UIPanGestureRecognizer *panRecognizer;
+@property (weak, readwrite, nonatomic) UIPanGestureRecognizer *keyBoardPanRecognizer;
 @property (weak, nonatomic) IBOutlet UINavigationController *navigationController;
 @property (strong, nonatomic) SSWAnimator *animator;
 @property (strong, nonatomic) UIPercentDrivenInteractiveTransition *interactionController;
@@ -52,7 +53,13 @@
     panRecognizer.direction = SSWPanDirectionRight;
     panRecognizer.maximumNumberOfTouches = 1;
     panRecognizer.delegate = self;
+    SSWDirectionalPanGestureRecognizer *keyBoardPanRecognizer = [[SSWDirectionalPanGestureRecognizer alloc] initWithTarget:self action:@selector(pan:)];
+    keyBoardPanRecognizer.direction = SSWPanDirectionRight;
+    keyBoardPanRecognizer.maximumNumberOfTouches = 1;
+    keyBoardPanRecognizer.delegate = self;
+    _keyBoardPanRecognizer = keyBoardPanRecognizer;
     [_navigationController.view addGestureRecognizer:panRecognizer];
+    [_navigationController.view addGestureRecognizer:keyBoardPanRecognizer];
     _panRecognizer = panRecognizer;
 
     _animator = [[SSWAnimator alloc] init];
@@ -85,8 +92,9 @@
     if (recognizer.state == UIGestureRecognizerStateBegan) {
         if (self.navigationController.viewControllers.count > 1 && !self.duringAnimation) {
             self.interactionController = [[UIPercentDrivenInteractiveTransition alloc] init];
-            self.interactionController.completionCurve = UIViewAnimationCurveEaseOut;
-
+//            self.interactionController.completionCurve = UIViewAnimationCurveEaseInOut;
+            self.interactionController.completionCurve = UIViewAnimationOptionCurveEaseInOut;
+            self.interactionController.completionSpeed = 0.75;
             [self.navigationController popViewControllerAnimated:YES];
         }
     } else if (recognizer.state == UIGestureRecognizerStateChanged) {

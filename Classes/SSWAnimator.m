@@ -2,7 +2,6 @@
 //  SSWAnimator.m
 //
 //  Created by Arkadiusz Holko http://holko.pl on 29-05-14.
-//
 
 #import "SSWAnimator.h"
 
@@ -48,8 +47,11 @@ UIViewAnimationOptions const SSWNavigationTransitionCurve = 7 << 16;
 {
     UIViewController *toViewController = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
     UIViewController *fromViewController = [transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
-    [[transitionContext containerView] insertSubview:toViewController.view belowSubview:fromViewController.view];
+    UIView *keyboard = fromViewController.inputAccessoryView;
 
+    
+    
+    [[transitionContext containerView] insertSubview:toViewController.view belowSubview:fromViewController.view];
     // parallax effect; the offset matches the one used in the pop animation in iOS 7.1
     CGFloat toViewControllerXTranslation = - CGRectGetWidth([transitionContext containerView].bounds) * 0.3f;
     toViewController.view.bounds = [transitionContext containerView].bounds;
@@ -58,8 +60,11 @@ UIViewAnimationOptions const SSWNavigationTransitionCurve = 7 << 16;
 
     // add a shadow on the left side of the frontmost view controller
     [fromViewController.view addLeftSideShadowWithFading];
+    [keyboard addLeftSideShadowWithFading];
+    
     BOOL previousClipsToBounds = fromViewController.view.clipsToBounds;
     fromViewController.view.clipsToBounds = NO;
+    keyboard.clipsToBounds = NO;
 
     // in the default transition the view controller below is a little dimmer than the frontmost one
     UIView *dimmingView = [[UIView alloc] initWithFrame:toViewController.view.bounds];
@@ -94,6 +99,12 @@ UIViewAnimationOptions const SSWNavigationTransitionCurve = 7 << 16;
     [UIView animateWithDuration:[self transitionDuration:transitionContext] delay:0 options:UIViewAnimationOptionTransitionNone | curveOption animations:^{
         toViewController.view.transform = CGAffineTransformIdentity;
         fromViewController.view.transform = CGAffineTransformMakeTranslation(toViewController.view.frame.size.width, 0);
+        
+        if (fromViewController.isFirstResponder) {
+            keyboard.transform = CGAffineTransformMakeTranslation(toViewController.view.frame.size.width, -keyboard.frame.size.height);
+        } else {
+            keyboard.transform = CGAffineTransformMakeTranslation(toViewController.view.frame.size.width, -keyboard.frame.size.height - 260);
+        }
         dimmingView.alpha = 0.0f;
 
     } completion:^(BOOL finished) {
@@ -107,7 +118,9 @@ UIViewAnimationOptions const SSWNavigationTransitionCurve = 7 << 16;
 
         [dimmingView removeFromSuperview];
         fromViewController.view.transform = CGAffineTransformIdentity;
+        keyboard.transform = CGAffineTransformIdentity;
         fromViewController.view.clipsToBounds = previousClipsToBounds;
+        keyboard.clipsToBounds = previousClipsToBounds;
         [transitionContext completeTransition:![transitionContext transitionWasCancelled]];
     }];
 
@@ -122,4 +135,56 @@ UIViewAnimationOptions const SSWNavigationTransitionCurve = 7 << 16;
     }
 }
 
+
+
 @end
+
+//@interface KeyboardStateListener : NSObject {
+//    BOOL _isVisible;
+//}
+//+ (KeyboardStateListener *)sharedInstance;
+//@property (nonatomic, readonly, getter=isVisible) BOOL visible;
+//@end
+//
+//static KeyboardStateListener *sharedInstance;
+//
+//@implementation KeyboardStateListener
+//
+//+ (KeyboardStateListener *)sharedInstance
+//{
+//    return sharedInstance;
+//}
+//
+//+ (void)load
+//{
+//    @autoreleasepool {
+//        sharedInstance = [[self alloc] init];
+//    }
+//}
+//
+//- (BOOL)isVisible
+//{
+//    return _isVisible;
+//}
+//
+//- (void)didShow
+//{
+//    _isVisible = YES;
+//}
+//
+//- (void)didHide
+//{
+//    _isVisible = NO;
+//}
+//
+//- (id)init
+//{
+//    if ((self = [super init])) {
+//        NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+//        [center addObserver:self selector:@selector(didShow) name:UIKeyboardDidShowNotification object:nil];
+//        [center addObserver:self selector:@selector(didHide) name:UIKeyboardWillHideNotification object:nil];
+//    }
+//    return self;
+//}
+//
+//@end
