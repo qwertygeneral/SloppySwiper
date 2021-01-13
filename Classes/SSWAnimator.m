@@ -51,9 +51,6 @@ UIViewAnimationOptions const SSWNavigationTransitionCurve = 7 << 16;
  {
         NSDictionary *info  = notification.userInfo;
         NSValue      *value = info[UIKeyboardFrameEndUserInfoKey];
-
-        printf("keyboard shown with height: ");
-        printf("%f\n", [value CGRectValue].size.height);
         self.keyboardHeight = [value CGRectValue].size.height;
  }
 
@@ -120,17 +117,7 @@ UIViewAnimationOptions const SSWNavigationTransitionCurve = 7 << 16;
     [UIView animateWithDuration:[self transitionDuration:transitionContext] delay:0 options:UIViewAnimationOptionTransitionNone | curveOption animations:^{
         toViewController.view.transform = CGAffineTransformIdentity;
         fromViewController.view.transform = CGAffineTransformMakeTranslation(toViewController.view.frame.size.width, 0);
-        CGFloat safeAreaBottomInset = 0;
-        if (@available(iOS 11.0, *)) {
-            safeAreaBottomInset = toViewController.view.safeAreaInsets.bottom;
-        }
-        if (fromViewController.isFirstResponder) {
-            printf("keyboard height in transition: ");
-            printf("%f\n", self.keyboardHeight);
-            keyboard.transform = CGAffineTransformMakeTranslation(toViewController.view.frame.size.width, -self.keyboardHeight);
-        } else {
-            keyboard.transform = CGAffineTransformMakeTranslation(toViewController.view.frame.size.width, -self.keyboardHeight);
-        }
+        keyboard.transform = CGAffineTransformMakeTranslation(toViewController.view.frame.size.width, -self.keyboardHeight);                // Need to keep the accessoryView vertical the same
         dimmingView.alpha = 0.0f;
 
     } completion:^(BOOL finished) {
