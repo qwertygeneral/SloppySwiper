@@ -10,7 +10,7 @@
 
 @interface SloppySwiper() <UIGestureRecognizerDelegate, SSWAnimatorDelegate>
 @property (weak, readwrite, nonatomic) UIPanGestureRecognizer *panRecognizer;
-@property (weak, readwrite, nonatomic) UIPanGestureRecognizer *keyBoardPanRecognizer;
+@property (readwrite, nonatomic) UIPanGestureRecognizer *keyBoardPanRecognizer;
 @property (weak, nonatomic) IBOutlet UINavigationController *navigationController;
 @property (strong, nonatomic) SSWAnimator *animator;
 @property (strong, nonatomic) UIPercentDrivenInteractiveTransition *interactionController;
@@ -24,6 +24,8 @@
 
 - (void)dealloc
 {
+    [_keyBoardPanRecognizer removeTarget:self action:@selector(pan:)];
+    [_navigationController.view removeGestureRecognizer:_keyBoardPanRecognizer];
     [_panRecognizer removeTarget:self action:@selector(pan:)];
     [_navigationController.view removeGestureRecognizer:_panRecognizer];
 }
